@@ -1,7 +1,7 @@
 #!powershell
 # This file is part of Ansible
 #
-# Copyright 2015, Corwin Brown <blakfeld@gmail.com>
+# Copyright 2015, Corwin Brown <corwin.brown@maxpoint.com>
 #
 # Ansible is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,8 +31,10 @@ $result = New-Object psobject @{
 
 $src = Get-AnsibleParam -obj $params -name "src" -failifempty $true
 $dest = Get-AnsibleParam -obj $params -name "dest" -failifempty $true
-$purge = Get-AnsibleParam -obj $params -name "purge" -default $false
-$recurse = Get-AnsibleParam -obj $params -name "recurse" -default $false
+$purge = ConvertTo-Bool (Get-AnsibleParam -obj $params -name "purge" -default $false)
+$recurse = ConvertTo-Bool (Get-AnsibleParam -obj $params -name "recurse" -default $false)
+$flags = Get-AnsibleParam -obj $params -name "flags" -default $null
+$_ansible_check_mode = Get-AnsibleParam -obj $params -name "_ansible_check_mode" -default $false
 
 # Search for an Error Message
 # Robocopy seems to display an error after 3 '-----' separator lines
@@ -73,37 +75,58 @@ Set-Attr $result.win_robocopy "src" $src
 $robocopy_opts += $dest
 Set-Attr $result.win_robocopy "dest" $dest
 
-if ($purge) {
-    $robocopy_opts += "/purge"
+if ($flags -eq $null) {
+    if ($purge) {
+        $robocopy_opts += "/purge"
+    }
+
+    if ($recurse) {
+        $robocopy_opts += "/e"
+    }
 }
+Else {
+    $robocopy_opts += $flags
+}
+
 Set-Attr $result.win_robocopy "purge" $purge
-
-if ($recurse) {
-    $robocopy_opts += "/e"
-}
 Set-Attr $result.win_robocopy "recurse" $recurse
+Set-Attr $result.win_robocopy "flags" $flags
 
-Try {
-    &robocopy $robocopy_opts | Tee-Object -Variable robocopy_output | Out-Null
-    $rc = $LASTEXITCODE
+$robocopy_output = ""
+$rc = 0
+If ($_ansible_check_mode -eq $true) {
+    $robocopy_output = "Would have copied the contents of $src to $dest"
+    $rc = 0
 }
-Catch {
-    $ErrorMessage = $_.Exception.Message
-    Fail-Json $result "Error synchronizing $src to $dest! Msg: $ErrorMessage"
+Else {
+    Try {
+        &robocopy $robocopy_opts | Tee-Object -Variable robocopy_output | Out-Null
+        $rc = $LASTEXITCODE
+    }
+    Catch {
+        $ErrorMessage = $_.Exception.Message
+        Fail-Json $result "Error synchronizing $src to $dest! Msg: $ErrorMessage"
+    }
 }
+
+Set-Attr $result.win_robocopy "return_code" $rc
 Set-Attr $result.win_robocopy "output" $robocopy_output
 
+$cmd_msg = "Success"
 If ($rc -eq 0) {
     $cmd_msg = "No files copied."
 }
 ElseIf ($rc -eq 1) {
     $cmd_msg = "Files copied successfully!"
+    $changed = $true
 }
 ElseIf ($rc -eq 2) {
     $cmd_msg = "Extra files or directories were detected!"
+    $changed = $true
 }
 ElseIf ($rc -eq 4) {
     $cmd_msg = "Some mismatched files or directories were detected!"
+    $changed = $true
 }
 ElseIf ($rc -eq 8) {
     $error_msg = SearchForError $robocopy_output "Some files or directories could not be copied!"
@@ -117,5 +140,8 @@ ElseIf ($rc -eq 16) {
     $error_msg = SearchForError $robocopy_output "Fatal Error!"
     Fail-Json $result $error_msg
 }
+
+Set-Attr $result.win_robocopy "msg" $cmd_msg
+Set-Attr $result.win_robocopy "changed" $changed
 
 Exit-Json $result

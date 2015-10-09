@@ -21,36 +21,43 @@
 # this is a windows documentation stub.  actual code lives in the .ps1
 # file of the same name
 
-DOCUMENATION = """
+DOCUMENTATION = """
 ---
 module: win_robocopy
-version_added: "2.0"
+version_added: "2.2"
 short_description: Synchronizes the contents of two directories using Robocopy.
 description:
     - Synchronizes the contents of two directories on the remote machine. Under the hood this just calls out to RoboCopy, since that should be available on most modern Windows Systems.
 options:
   src:
     description:
-      - Source file to sync.
+      - Source file/directory to sync.
     required: true
   dest:
     description:
-      - Destination file to sync (Will receive contents of src).
+      - Destination file/directory to sync (Will receive contents of src).
     required: true
   recurse:
     description:
-      - Includes all subdirectories (Toggles the `/e` flag to RoboCopy).
+      - Includes all subdirectories (Toggles the `/e` flag to RoboCopy). If "flags" is set, this will be ignored.
     choices:
       - true
       - false
     defaults: false
+    required: false
   purge:
     description:
-      - Deletes any files/directories found in the destination that do not exist in the source (Toggles the `/purge` flag to RoboCopy).
+      - Deletes any files/directories found in the destination that do not exist in the source (Toggles the `/purge` flag to RoboCopy). If "flags" is set, this will be ignored.
     choices:
       - true
       - false
     defaults: false
+    required: false
+  flags:
+    description:
+      - Directly supply Robocopy flags. If set, purge and recurse will be ignored.
+    default: None
+    required: false
 author: Corwin Brown (@blakfeld)
 notes:
     - This is not a complete port of the "synchronize" module. Unlike the "synchronize" module this only performs the sync/copy on the remote machine, not from the master to the remote machine.
@@ -76,4 +83,61 @@ $ ansible -i hosts all -m win_robocopy -a "src=C:\\DirectoryOne dest=C:\\Directo
     dest: "C:\\DirectoryTwo"
     recurse: true
     purge: true
+
+---
+- name: Sync Two Directories
+  win_robocopy:
+    src: "C:\\DirectoryOne
+    dest: "C:\\DirectoryTwo"
+    recurse: true
+    purge: true
+    flags: '/XD SOME_DIR /XF SOME_FILE /MT:32'
 """
+
+RETURN = '''
+src:
+    description: The Source file/directory of the sync.
+    returned: always
+    type: string
+    sample: "c:/Some/Path"
+dest:
+    description: The Destination file/directory of the sync.
+    returned: always
+    type: string
+    sample: "c:/Some/Path"
+recurse:
+    description: Whether or not the recurse flag was toggled.
+    returned: always
+    type: bool
+    sample: False
+purge:
+    description: Whether or not the purge flag was toggled.
+    returned: always
+    type: bool
+    sample: False
+flags:
+    description: Any flags passed in by the user.
+    returned: always
+    type: string
+    sample: "/e /purge"
+return_code:
+    description: The return code retuned by robocopy.
+    returned: success
+    type: int
+    sample: 1
+output:
+    description: The output of running the robocopy command.
+    returned: success
+    type: string
+    sample: "-------------------------------------------------------------------------------\n   ROBOCOPY     ::     Robust File Copy for Windows                              \n-------------------------------------------------------------------------------\n"
+msg:
+    description: Output intrepreted into a concise message.
+    returned: always
+    type: string
+    sample: No files copied!
+changed:
+    description: Whether or not any changes were made.
+    returned: always
+    type: bool
+    sample: False
+'''
