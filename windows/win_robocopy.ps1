@@ -1,7 +1,7 @@
 #!powershell
 # This file is part of Ansible
 #
-# Copyright 2015, Corwin Brown <blakfeld@gmail.com>
+# Copyright 2015, Corwin Brown <corwin.brown@maxpoint.com>
 #
 # Ansible is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -29,46 +29,29 @@ $result = New-Object psobject @{
     changed = $false
 }
 
+$src = Get-AnsibleParam -obj $params -name "src" -failifempty $true
+$dest = Get-AnsibleParam -obj $params -name "dest" -failifempty $true
+$purge = Get-AnsibleParam -obj $params -name "purge" -default $false
+$recurse = Get-AnsibleParam -obj $params -name "recurse" -default $false
+
+# Build Arguments
 $robocopy_opts = @()
-If (Get-Member -InputObject $params -Name src) {
-    $src = $params.src.ToString()
-    $robocopy_opts += $src
 
-    If (-Not (Test-Path -path $src)) {
-        Fail-Json $result "src file: $src does not exist."
-    }
+$robocopy_opts += $src
+Set-Attr $result.win_robocopy "src" $src
 
-    Set-Attr $result.win_robocopy "src" $src
+$robocopy_opts += $dest
+Set-Attr $result.win_robocopy "dest" $dest
+
+if ($purge) {
+    $robocopy_opts += "/purge"
 }
-Else {
-    Fail-Json $result "missing required argument: src"
+Set-Attr $result.win_robocopy "purge" $purge
+
+if ($recurse) {
+    $robocopy_opts += "/e"
 }
-
-If (Get-Member -InputObject $params -Name dest) {
-    $dest = $params.dest.ToString()
-    $robocopy_opts += $params.dest.toString()
-
-    Set-Attr $result.win_robocopy "dest" $dest
-}
-Else {
-    Fail-Json $result "missing required argument: dest"
-}
-
-If (Get-Member -InputObject $params -Name purge) {
-    If ($params.purge) {
-        $robocopy_opts += "/purge"
-
-        Set-Attr $result.win_robocopy "purge" $params.purge
-    }
-}
-
-If (Get-Member -InputObject $params -Name recurse) {
-    If ($params.recurse) {
-        $robocopy_opts += "/e"
-
-        Set-Attr $result.win_robocopy "recurse" $params.recurse
-    }
-}
+Set-Attr $result.win_robocopy "recurse" $recurse
 
 Try {
     &robocopy $robocopy_opts
