@@ -33,6 +33,7 @@ $src = Get-AnsibleParam -obj $params -name "src" -failifempty $true
 $dest = Get-AnsibleParam -obj $params -name "dest" -failifempty $true
 $purge = Get-AnsibleParam -obj $params -name "purge" -default $false
 $recurse = Get-AnsibleParam -obj $params -name "recurse" -default $false
+$flags = Get-AnsibleParam -obj $params -name "flags" -default $null
 
 # Build Arguments
 $robocopy_opts = @()
@@ -43,15 +44,22 @@ Set-Attr $result.win_robocopy "src" $src
 $robocopy_opts += $dest
 Set-Attr $result.win_robocopy "dest" $dest
 
-if ($purge) {
-    $robocopy_opts += "/purge"
-}
-Set-Attr $result.win_robocopy "purge" $purge
+If ($flags -eq $null) {
+    If ($purge) {
+        $robocopy_opts += "/purge"
+    }
 
-if ($recurse) {
-    $robocopy_opts += "/e"
+    If ($recurse) {
+        $robocopy_opts += "/e"
+    }
 }
+Else {
+    $robocopy_opts += $flags
+}
+
+Set-Attr $result.win_robocopy "purge" $purge
 Set-Attr $result.win_robocopy "recurse" $recurse
+Set-Attr $result.win_robocopy "flags" $flags
 
 Try {
     &robocopy $robocopy_opts
