@@ -39,18 +39,25 @@ options:
     required: true
   recurse:
     description:
-      - Includes all subdirectories (Toggles the `/e` flag to RoboCopy).
+      - Includes all subdirectories (Toggles the `/e` flag to RoboCopy). This option is ignored if you use the 'flags' argument.
     choices:
       - true
       - false
     defaults: false
+    required: false
   purge:
     description:
-      - Deletes any files/directories found in the destination that do not exist in the source (Toggles the `/purge` flag to RoboCopy).
+      - Deletes any files/directories found in the destination that do not exist in the source (Toggles the `/purge` flag to RoboCopy). This option is ignored if you use the 'flags' argument.
     choices:
       - true
       - false
     defaults: false
+    required: false
+  flags:
+    description:
+      - Directly pass through any custom arguments to Robocopy.
+    defaults: false
+    required: false
 author: Corwin Brown (@blakfeld)
 notes:
     - This is not a complete port of the "synchronize" module. Unlike the "synchronize" module this only performs the sync/copy on the remote machine, not from the master to the remote machine.
@@ -72,8 +79,15 @@ $ ansible -i hosts all -m win_robocopy -a "src=C:\\DirectoryOne dest=C:\\Directo
 ---
 - name: Sync Two Directories
   win_robocopy:
-    src: "C:\\DirectoryOne
+    src: "C:\\DirectoryOne"
     dest: "C:\\DirectoryTwo"
     recurse: true
     purge: true
+
+---
+- name: Sync Two Directories
+  win_robocopy:
+    src: "C:\\DirectoryOne"
+    dest: "C:\\DirectoryTwo"
+    flags: '/XD SOME_DIR /XF SOME_FILE /MT:32'
 """
