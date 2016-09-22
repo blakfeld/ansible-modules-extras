@@ -42,6 +42,7 @@ $method = Get-AnsibleParam -obj $params "method" -default "GET"
 $content_type = Get-AnsibleParam -obj $params -name "content_type"
 $headers = Get-AnsibleParam -obj $params -name "headers"
 $body = Get-AnsibleParam -obj $params -name "body"
+$file = Get-AnsibleParam -obj $params -name "file"
 $use_basic_parsing = ConvertTo-Bool (Get-AnsibleParam -obj $params -name "use_basic_parsing" -default $true)
 
 $webrequest_opts.Uri = $url
@@ -55,6 +56,15 @@ Set-Attr $result.win_uri "content_type" $content_type
 
 $webrequest_opts.UseBasicParsing = $use_basic_parsing
 Set-Attr $result.win_uri "use_basic_parsing" $use_basic_parsing
+
+if ($file -ne $null) {
+    if (Test-Path $in_file -PathType leaf) {
+        $webrequest_opts.InFile = $file
+        Set-Attr $result.win_url "file" $file
+    } else {
+        Fail-Json $result "$in_file does not exist!"
+    }
+}
 
 if ($headers -ne $null) {
     $req_headers = @{}
