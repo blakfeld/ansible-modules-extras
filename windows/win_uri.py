@@ -50,6 +50,9 @@ options:
   content_type:
     description:
       - Sets the "Content-Type" header.
+  file:
+    description:
+      - Use the contents of a file as your web request.
   body:
     description:
       - The body of the HTTP request/response to the web service.
@@ -97,6 +100,13 @@ EXAMPLES = """
     url: http://www.somesite.com
     method: POST
     body: "{ 'some': 'json' }"
+
+# Upload a file
+- name: Upload file to Repo.
+  win_uri:
+    url: http://myrepo.com/upload_endpoint
+    method: PUT
+    file: C:\some\file\path.zip
 """
 
 RETURN = """
@@ -115,6 +125,11 @@ content_type:
   returned: always
   type: string
   sample: "application/json"
+file:
+    description: The file path used to generate the body of a web-request.
+    returned: always
+    type: string
+    sample: "C:\some\file\path"
 use_basic_parsing:
   description: The state of the "use_basic_parsing" flag.
   returned: always
