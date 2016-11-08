@@ -57,12 +57,13 @@ Set-Attr $result.win_uri "content_type" $content_type
 $webrequest_opts.UseBasicParsing = $use_basic_parsing
 Set-Attr $result.win_uri "use_basic_parsing" $use_basic_parsing
 
+
 if ($file -ne $null) {
-    if (Test-Path $in_file -PathType leaf) {
+    if (Test-Path $file -PathType leaf) {
         $webrequest_opts.InFile = $file
         Set-Attr $result.win_url "file" $file
     } else {
-        Fail-Json $result "$in_file does not exist!"
+        Fail-Json $result "$file does not exist!"
     }
 }
 
