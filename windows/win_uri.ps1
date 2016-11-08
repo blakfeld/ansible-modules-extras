@@ -57,7 +57,6 @@ Set-Attr $result.win_uri "content_type" $content_type
 $webrequest_opts.UseBasicParsing = $use_basic_parsing
 Set-Attr $result.win_uri "use_basic_parsing" $use_basic_parsing
 
-
 if ($file -ne $null) {
     if (Test-Path $file -PathType leaf) {
         $webrequest_opts.InFile = $file
