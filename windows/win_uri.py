@@ -52,7 +52,7 @@ options:
       - Sets the "Content-Type" header.
   file:
     description:
-      - Use the contents of a file as your web request.
+      - Use the contents of a file as the body of your web request.
   body:
     description:
       - The body of the HTTP request/response to the web service.
