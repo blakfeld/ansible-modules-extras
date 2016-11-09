@@ -53,6 +53,7 @@ options:
   file:
     description:
       - Use the contents of a file as the body of your web request.
+    version_added: "2.3"
   body:
     description:
       - The body of the HTTP request/response to the web service.
