@@ -106,7 +106,7 @@ EXAMPLES = """
   win_uri:
     url: http://myrepo.com/upload_endpoint
     method: PUT
-    file: C:\some\file\path.zip
+    file: C:/some/file/path.zip
 """
 
 RETURN = """
@@ -129,7 +129,7 @@ file:
     description: The file path used to generate the body of a web-request.
     returned: always
     type: string
-    sample: "C:\some\file\path"
+    sample: "C:/some/file/path"
 use_basic_parsing:
   description: The state of the "use_basic_parsing" flag.
   returned: always
